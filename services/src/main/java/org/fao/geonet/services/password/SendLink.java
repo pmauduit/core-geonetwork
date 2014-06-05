@@ -24,18 +24,22 @@
 package org.fao.geonet.services.password;
 
 import jeeves.constants.Jeeves;
+
 import org.fao.geonet.domain.Profile;
 import org.fao.geonet.domain.User;
 import org.fao.geonet.exceptions.OperationAbortedEx;
 import org.fao.geonet.exceptions.UserNotFoundEx;
+
 import jeeves.server.ServiceConfig;
 import jeeves.server.context.ServiceContext;
+
 import org.fao.geonet.Util;
 import org.fao.geonet.repository.UserRepository;
 import org.fao.geonet.utils.Xml;
 import org.fao.geonet.GeonetContext;
 import org.fao.geonet.constants.Geonet;
 import org.fao.geonet.constants.Params;
+import org.fao.geonet.kernel.GeonetworkDataDirectory;
 import org.fao.geonet.kernel.setting.SettingInfo;
 import org.fao.geonet.kernel.setting.SettingManager;
 import org.fao.geonet.services.MailSendingService;
@@ -61,9 +65,7 @@ public class SendLink extends MailSendingService {
 	// ---
 	// --------------------------------------------------------------------------
 
-	public void init(String appPath, ServiceConfig params) throws Exception {
-        this.stylePath = appPath + Geonet.Path.XSLT_FOLDER + FS + "services" + FS + "account" + FS;
-	}
+	public void init(String appPath, ServiceConfig params) throws Exception {}
 
 	// --------------------------------------------------------------------------
 	// ---
@@ -74,6 +76,8 @@ public class SendLink extends MailSendingService {
 	public Element exec(Element params, ServiceContext context)
 			throws Exception {
 
+		this.stylePath = context.getBean(GeonetworkDataDirectory.class).getWebappDir() + Geonet.Path.XSLT_FOLDER + FS + "services" + FS + "account" + FS;
+		
 		String username = Util.getParam(params, Params.USERNAME);
 		String template = Util.getParam(params, Params.TEMPLATE, CHANGE_EMAIL_XSLT);
 
@@ -84,7 +88,7 @@ public class SendLink extends MailSendingService {
 
 		// only let registered users change their password  
 		if (user.getProfile() != Profile.RegisteredUser) {
-			// Don't throw OperationNotAllowedEx because it is not related to not having enough priviledges
+			// Don't throw OperationNotAllowedEx because it is not related to not having enough privileges
 			throw new IllegalArgumentException("Only users with profile RegisteredUser can change their password using this option");
         }
 
@@ -105,8 +109,8 @@ public class SendLink extends MailSendingService {
 		String todaysDate = sdf.format(cal.getTime());
 		String changeKey = PasswordUtil.encode(context, scrambledPassword+todaysDate);
 
-		// generate email details using customisable stylesheet
-		// TODO: allow internationalised emails
+		// generate email details using customizable stylesheet
+		// TODO: allow internationalized emails
 		Element root = new Element("root");
 		root.addContent(new Element("username").setText(username));
         for (String email : user.getEmailAddresses()) {
