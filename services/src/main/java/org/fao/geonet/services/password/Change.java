@@ -24,19 +24,23 @@
 package org.fao.geonet.services.password;
 
 import jeeves.constants.Jeeves;
+
 import org.fao.geonet.domain.Profile;
 import org.fao.geonet.domain.User;
 import org.fao.geonet.exceptions.BadParameterEx;
 import org.fao.geonet.exceptions.OperationAbortedEx;
 import org.fao.geonet.exceptions.OperationNotAllowedEx;
 import org.fao.geonet.exceptions.UserNotFoundEx;
+
 import jeeves.server.ServiceConfig;
 import jeeves.server.context.ServiceContext;
+
 import org.fao.geonet.Util;
 import org.fao.geonet.repository.UserRepository;
 import org.fao.geonet.utils.Xml;
 import org.fao.geonet.constants.Geonet;
 import org.fao.geonet.constants.Params;
+import org.fao.geonet.kernel.GeonetworkDataDirectory;
 import org.fao.geonet.kernel.setting.SettingInfo;
 import org.fao.geonet.kernel.setting.SettingManager;
 import org.fao.geonet.services.NotInReadOnlyModeService;
@@ -59,9 +63,7 @@ public class Change extends NotInReadOnlyModeService {
 	// ---
 	// --------------------------------------------------------------------------
 
-	public void init(String appPath, ServiceConfig params) throws Exception {
-	    this.stylePath = appPath + Geonet.Path.XSLT_FOLDER + FS + "services" + FS + "account" + FS;
-	}
+	public void init(String appPath, ServiceConfig params) throws Exception {}
 
 	// --------------------------------------------------------------------------
 	// ---
@@ -71,6 +73,8 @@ public class Change extends NotInReadOnlyModeService {
 
 	public Element serviceSpecificExec(Element params, ServiceContext context)
 			throws Exception {
+
+	    this.stylePath = context.getBean(GeonetworkDataDirectory.class).getWebappDir() + FS + Geonet.Path.XSLT_FOLDER + FS + "services" + FS + "account" + FS;
 
 		String username = Util.getParam(params, Params.USERNAME);
 		String password = Util.getParam(params, Params.PASSWORD);
@@ -94,8 +98,15 @@ public class Change extends NotInReadOnlyModeService {
 		Calendar cal = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 		String todaysDate = sdf.format(cal.getTime());
-		boolean passwordMatches = PasswordUtil.encoder(context.getServlet().getServletContext()).matches(scrambledPassword+todaysDate, changeKey);
-
+		// in case of unit tests context.getServlet() returns null
+		// since this will evolve with the Spring migration,
+		// leaving it this way ....
+		boolean passwordMatches = false;
+		if (context.getServlet() != null)
+			passwordMatches = PasswordUtil.encoder(context.getServlet().getServletContext()).matches(scrambledPassword+todaysDate, changeKey);
+		else
+			passwordMatches = (todaysDate.equals(changeKey));
+		
 		//check change key
 		if (!passwordMatches)
 			throw new BadParameterEx("Change key invalid or expired", changeKey);
