@@ -1,16 +1,30 @@
 package org.fao.geonet.domain.responses;
 
-
 import org.fao.geonet.domain.CswCapabilitiesInfoField;
 
 import javax.xml.bind.annotation.*;
+import java.io.Serializable;
 import java.util.List;
 
+/**
+ * This class is a helper class for the service that returns the csw service configuration.
+ *
+ * @author Jose García
+ */
 @XmlRootElement(name = "cswcapabilitiesinfofield")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class CswConfiguration {
+public class CswConfigurationResponse implements Serializable {
+    private static final long serialVersionUID = -4426385060234828544L;
 
-    private boolean cswEnabled;
+    public boolean isCswEnabled() {
+		return cswEnabled;
+	}
+
+	public boolean isCswMetadataPublic() {
+		return cswMetadataPublic;
+	}
+
+	private boolean cswEnabled;
     private boolean cswMetadataPublic;
     private int cswContactId;
 
