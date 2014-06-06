@@ -438,6 +438,14 @@ public abstract class AbstractCoreIntegrationTest extends AbstractSpringDataTest
         return admin;
     }
 
+    public User loginAs(User usr, ServiceContext context) {
+        UserSession userSession = new UserSession();
+        userSession.loginAs(usr);
+        context.setUserSession(userSession);
+        return usr;
+    }
+   
+    
     public Element getSampleMetadataXml() throws IOException, JDOMException {
         final URL resource = AbstractCoreIntegrationTest.class.getResource("kernel/valid-metadata.iso19139.xml");
         return Xml.loadStream(resource.openStream());
