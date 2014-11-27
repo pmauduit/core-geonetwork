@@ -29,6 +29,12 @@ public class TransformerFactoryFactory {
         }
     }
 
+	// used for JUnit testing into Eclipse (which selects an incompatible
+	// TransformerFactory)
+	public static void setTransformerFactory(TransformerFactory _factory) {
+		factory = _factory;
+	}
+
     public static TransformerFactory getTransformerFactory() throws TransformerConfigurationException {
     	if (factory == null) {
     		debug("TransformerFactoryFactory is null. Initializing ...");

@@ -197,6 +197,12 @@
 			<error sheet="xml-error.xsl" contentType="application/xml; charset=UTF-8" />
 		</service>
 
+        <service name="wmc.import">
+            <class name=".services.mef.ImportWmc" />
+            <error sheet="xml-error.xsl" contentType="application/xml; charset=UTF-8" />
+        </service>
+
+
 		<service name="xml.mef.import.ui">
       <!-- TODO rename Catalogue.js -->
 			<class name=".services.mef.Import" />
