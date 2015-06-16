@@ -1,16 +1,8 @@
 package org.fao.geonet.kernel.mef;
 
-import jeeves.server.context.ServiceContext;
-import org.fao.geonet.AbstractCoreIntegrationTest;
-import org.fao.geonet.ZipUtil;
-import org.fao.geonet.constants.Params;
-import org.fao.geonet.domain.Metadata;
-import org.fao.geonet.domain.User;
-import org.fao.geonet.repository.MetadataRepository;
-import org.fao.geonet.utils.IO;
-import org.jdom.Element;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -19,9 +11,24 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import jeeves.server.context.ServiceContext;
+
+import org.fao.geonet.AbstractCoreIntegrationTest;
+import org.fao.geonet.ZipUtil;
+import org.fao.geonet.constants.Params;
+import org.fao.geonet.domain.ISODate;
+import org.fao.geonet.domain.Metadata;
+import org.fao.geonet.domain.MetadataStatus;
+import org.fao.geonet.domain.MetadataStatusId;
+import org.fao.geonet.domain.User;
+import org.fao.geonet.repository.MetadataRepository;
+import org.fao.geonet.repository.MetadataStatusRepository;
+import org.fao.geonet.repository.StatusValueRepository;
+import org.fao.geonet.utils.IO;
+import org.fao.geonet.utils.Xml;
+import org.jdom.Element;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Test MEF.
@@ -33,6 +40,11 @@ import static org.junit.Assert.assertTrue;
 public class MEFLibIntegrationTest extends AbstractCoreIntegrationTest {
     @Autowired
     MetadataRepository _metadataRepo;
+
+    @Autowired
+    StatusValueRepository _statusValueRepo;
+    @Autowired
+    MetadataStatusRepository _metadataStatusRepo;
 
     @Test
     public void testDoImportMefVersion1() throws Exception {
@@ -68,6 +80,34 @@ public class MEFLibIntegrationTest extends AbstractCoreIntegrationTest {
             assertNotNull(metadata);
             assertEquals(admin.getId(), metadata.getSourceInfo().getOwner().intValue());
         }
+    }
+
+    @Test
+    public void testBuildMetadataStatus() throws Exception {
+        ServiceContext context = createServiceContext();
+        new ImportMetadata(this, context).invoke();
+
+        List<Metadata> mds = _metadataRepo.findAll();
+        User admin = loginAsAdmin(context);
+        Element elem = MEFLib.buildMetadataStatus(context, mds.get(0));
+        assertTrue("expected no metadatastatus for newly inserted record, found " + elem.getChildren().size(),
+                elem.getChildren().size() == 0);
+
+        // Inserts some mdstatus for the record
+        MetadataStatusId mdsid = new MetadataStatusId().setChangeDate(new ISODate())
+                .setMetadataId(mds.get(0).getId())
+                .setStatusId(2)
+                .setUserId(admin.getId());
+        MetadataStatus mdstat = new MetadataStatus();
+        mdstat.setId(mdsid);
+        mdstat.setChangeMessage("Status Changed to Approved for the testsuite");
+        mdstat.setStatusValue(_statusValueRepo.findOne(2)); // approved
+        _metadataStatusRepo.saveAndFlush(mdstat);
+
+        elem = MEFLib.buildMetadataStatus(context, mds.get(0));
+        System.out.println(Xml.getString(elem));
+        assertTrue("expected 1 metadatastatus, found " + elem.getChildren().size(),
+                elem.getChildren().size() == 1);
     }
 
     public static class ImportMetadata {

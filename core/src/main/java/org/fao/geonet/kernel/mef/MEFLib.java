@@ -24,6 +24,7 @@
 package org.fao.geonet.kernel.mef;
 
 import jeeves.server.context.ServiceContext;
+
 import org.apache.commons.io.IOUtils;
 import org.fao.geonet.GeonetContext;
 import org.fao.geonet.ZipUtil;
@@ -38,8 +39,10 @@ import org.fao.geonet.kernel.DataManager;
 import org.fao.geonet.kernel.setting.SettingManager;
 import org.fao.geonet.repository.GroupRepository;
 import org.fao.geonet.repository.MetadataRepository;
+import org.fao.geonet.repository.MetadataStatusRepository;
 import org.fao.geonet.repository.OperationAllowedRepository;
 import org.fao.geonet.repository.OperationRepository;
+import org.fao.geonet.repository.UserRepository;
 import org.fao.geonet.utils.BinaryFile;
 import org.fao.geonet.utils.Xml;
 import org.jdom.Document;
@@ -63,6 +66,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
 import javax.annotation.Nonnull;
 
 import static org.fao.geonet.kernel.mef.MEFConstants.DIR_PRIVATE;
@@ -340,6 +344,7 @@ public class MEFLib {
 
 		info.addContent(buildInfoGeneral(md, format, skipUUID, context));
 		info.addContent(buildInfoCategories(md));
+		info.addContent(buildMetadataStatus(context, md));
 		info.addContent(buildInfoPrivileges(context, md));
 
 		info.addContent(buildInfoFiles("public", pubDir.toString()));
@@ -348,17 +353,17 @@ public class MEFLib {
 		return Xml.getString(new Document(info));
 	}
 
-	/**
-	 * Build general section of info file.
-	 * 
-	 * 
-	 * @param md
-	 * @param format
-	 * @param skipUUID
-	 *            If true, do not add uuid, site identifier and site name.
-	 * @param context
-	 * @return
-	 */
+    /**
+     * Build general section of info file.
+     * 
+     * 
+     * @param md
+     * @param format
+     * @param skipUUID
+     *            If true, do not add uuid, site identifier and site name.
+     * @param context
+     * @return
+     */
 	static Element buildInfoGeneral(Metadata md, Format format,
 			boolean skipUUID, ServiceContext context) {
 		String id = String.valueOf(md.getId());
@@ -371,6 +376,9 @@ public class MEFLib {
 		String rating = "" + md.getDataInfo().getRating();
 		String popularity = "" + md.getDataInfo().getPopularity();
 
+		Integer ownerId = md.getSourceInfo().getOwner();
+		User owner = context.getBean(UserRepository.class).findOne(ownerId);
+
 		Element general = new Element("general").addContent(
 				new Element("createDate").setText(createDate)).addContent(
 				new Element("changeDate").setText(changeDate)).addContent(
@@ -379,7 +387,8 @@ public class MEFLib {
 				new Element("localId").setText(id)).addContent(
 				new Element("format").setText(format.toString())).addContent(
 				new Element("rating").setText(rating)).addContent(
-				new Element("popularity").setText(popularity));
+				new Element("popularity").setText(popularity)).addContent(
+				new Element("owner").setText(owner.getUsername()));
 
 		if (!skipUUID) {
 			GeonetContext gc = (GeonetContext) context
@@ -396,7 +405,7 @@ public class MEFLib {
 
 	/**
 	 * Build category section of info file.
-	 * 
+	 *
 	 * @param md
 	 * @return
 	 * @throws SQLException
@@ -418,8 +427,32 @@ public class MEFLib {
 		return categ;
 	}
 
+    /**
+     * Build MetadataStatus section of info file.
+     *
+     * @param context
+     * @param md
+     * @return Element an element containing the MetadataStatus infos
+     */
+    static Element buildMetadataStatus(ServiceContext context, Metadata md) {
+        Element mdstatus = new Element("metadatastatus");
+        Integer mdId = md.getId();
+        UserRepository userRepo = context.getBean(UserRepository.class);
+        List<MetadataStatus> st = context.getBean(MetadataStatusRepository.class).findAllById_MetadataId(mdId, null);
+        for(MetadataStatus s: st) {
+            User usr = userRepo.findOne(s.getId().getUserId());
+            Element curStatus = new Element("status");
+            curStatus.addContent(new Element("statusId").setText("" + s.getId().getStatusId()));
+            curStatus.addContent(new Element("changeDate").setText(s.getId().getChangeDate().toString()));
+            curStatus.addContent(new Element("changeMessage").setText(s.getChangeMessage()));
+            curStatus.addContent(new Element("userName").setText(usr.getUsername()));
+            mdstatus.addContent(curStatus);
+        }
+        return mdstatus;
+    }
+	
 	/**
-	 * Build priviliges section of info file.
+	 * Build privileges section of info file.
 	 * 
 	 * @param context
 	 * @param md
