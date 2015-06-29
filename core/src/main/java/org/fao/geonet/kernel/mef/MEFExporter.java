@@ -23,7 +23,15 @@
 
 package org.fao.geonet.kernel.mef;
 
+import static org.fao.geonet.kernel.mef.MEFConstants.FILE_INFO;
+import static org.fao.geonet.kernel.mef.MEFConstants.FILE_METADATA;
+
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import jeeves.server.context.ServiceContext;
+
 import org.fao.geonet.Constants;
 import org.fao.geonet.ZipUtil;
 import org.fao.geonet.constants.Geonet;
@@ -36,13 +44,6 @@ import org.fao.geonet.kernel.mef.MEFLib.Version;
 import org.fao.geonet.lib.Lib;
 import org.fao.geonet.utils.IO;
 import org.fao.geonet.utils.Log;
-
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import static org.fao.geonet.kernel.mef.MEFConstants.FILE_INFO;
-import static org.fao.geonet.kernel.mef.MEFConstants.FILE_METADATA;
 
 /**
  * Export MEF file
@@ -66,7 +67,7 @@ class MEFExporter {
 	 * @throws Exception
 	 */
 	public static Path doExport(ServiceContext context, String uuid,
-			Format format, boolean skipUUID, boolean resolveXlink, boolean removeXlinkAttribute) throws Exception {
+			Format format, boolean skipUUID, boolean resolveXlink, boolean removeXlinkAttribute, boolean withMdStatus) throws Exception {
 		Pair<Metadata, String> recordAndMetadata =
 				MEFLib.retrieveMetadata(context, uuid, resolveXlink, removeXlinkAttribute);
 		Metadata record = recordAndMetadata.one();
@@ -87,7 +88,7 @@ class MEFExporter {
 
             // --- save info file
             binData = MEFLib.buildInfoFile(context, record, format, pubDir, priDir,
-                    skipUUID).getBytes(Constants.ENCODING);
+                    skipUUID, withMdStatus).getBytes(Constants.ENCODING);
             Files.write(zipFs.getPath(FILE_INFO), binData);
 
 

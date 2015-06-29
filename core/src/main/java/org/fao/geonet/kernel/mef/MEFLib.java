@@ -23,30 +23,10 @@
 
 package org.fao.geonet.kernel.mef;
 
-import jeeves.server.context.ServiceContext;
-
-import org.apache.commons.io.IOUtils;
-import org.fao.geonet.GeonetContext;
-import org.fao.geonet.ZipUtil;
-import org.fao.geonet.constants.Edit;
-import org.fao.geonet.constants.Geonet;
-import org.fao.geonet.domain.*;
-import org.fao.geonet.exceptions.BadInputEx;
-import org.fao.geonet.exceptions.BadParameterEx;
-import org.fao.geonet.exceptions.MetadataNotFoundEx;
-import org.fao.geonet.kernel.AccessManager;
-import org.fao.geonet.kernel.DataManager;
-import org.fao.geonet.kernel.setting.SettingManager;
-import org.fao.geonet.repository.GroupRepository;
-import org.fao.geonet.repository.MetadataRepository;
-import org.fao.geonet.repository.MetadataStatusRepository;
-import org.fao.geonet.repository.OperationAllowedRepository;
-import org.fao.geonet.repository.OperationRepository;
-import org.fao.geonet.repository.UserRepository;
-import org.fao.geonet.utils.BinaryFile;
-import org.fao.geonet.utils.Xml;
-import org.jdom.Document;
-import org.jdom.Element;
+import static org.fao.geonet.kernel.mef.MEFConstants.DIR_PRIVATE;
+import static org.fao.geonet.kernel.mef.MEFConstants.DIR_PUBLIC;
+import static org.fao.geonet.kernel.mef.MEFConstants.FS;
+import static org.fao.geonet.kernel.mef.MEFConstants.VERSION;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -69,10 +49,38 @@ import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nonnull;
 
-import static org.fao.geonet.kernel.mef.MEFConstants.DIR_PRIVATE;
-import static org.fao.geonet.kernel.mef.MEFConstants.DIR_PUBLIC;
-import static org.fao.geonet.kernel.mef.MEFConstants.FS;
-import static org.fao.geonet.kernel.mef.MEFConstants.VERSION;
+import jeeves.server.context.ServiceContext;
+
+import org.apache.commons.io.IOUtils;
+import org.fao.geonet.GeonetContext;
+import org.fao.geonet.ZipUtil;
+import org.fao.geonet.constants.Edit;
+import org.fao.geonet.constants.Geonet;
+import org.fao.geonet.domain.Group;
+import org.fao.geonet.domain.ISODate;
+import org.fao.geonet.domain.Metadata;
+import org.fao.geonet.domain.MetadataCategory;
+import org.fao.geonet.domain.MetadataStatus;
+import org.fao.geonet.domain.Operation;
+import org.fao.geonet.domain.OperationAllowed;
+import org.fao.geonet.domain.Pair;
+import org.fao.geonet.domain.User;
+import org.fao.geonet.exceptions.BadInputEx;
+import org.fao.geonet.exceptions.BadParameterEx;
+import org.fao.geonet.exceptions.MetadataNotFoundEx;
+import org.fao.geonet.kernel.AccessManager;
+import org.fao.geonet.kernel.DataManager;
+import org.fao.geonet.kernel.setting.SettingManager;
+import org.fao.geonet.repository.GroupRepository;
+import org.fao.geonet.repository.MetadataRepository;
+import org.fao.geonet.repository.MetadataStatusRepository;
+import org.fao.geonet.repository.OperationAllowedRepository;
+import org.fao.geonet.repository.OperationRepository;
+import org.fao.geonet.repository.UserRepository;
+import org.fao.geonet.utils.BinaryFile;
+import org.fao.geonet.utils.Xml;
+import org.jdom.Document;
+import org.jdom.Element;
 
 
 /**
@@ -174,18 +182,24 @@ public class MEFLib {
 	// --------------------------------------------------------------------------
 
 	public static Path doExport(ServiceContext context, String uuid,
-			String format, boolean skipUUID, boolean resolveXlink, boolean removeXlinkAttribute) throws Exception {
+            String format, boolean skipUUID, boolean resolveXlink,
+            boolean removeXlinkAttribute, boolean withMdStatus)
+            throws Exception {
 		return MEFExporter.doExport(context, uuid, Format.parse(format),
-				skipUUID, resolveXlink, removeXlinkAttribute);
+                skipUUID, resolveXlink, removeXlinkAttribute, withMdStatus);
 	}
 
 	// --------------------------------------------------------------------------
 
 	public static Path doMEF2Export(ServiceContext context,
-			Set<String> uuids, String format, boolean skipUUID, Path stylePath, boolean resolveXlink, boolean removeXlinkAttribute)
+ Set<String> uuids,
+            String format, boolean skipUUID, Path stylePath,
+            boolean resolveXlink, boolean removeXlinkAttribute,
+            boolean withMdStatus)
 			throws Exception {
 		return MEF2Exporter.doExport(context, uuids, Format.parse(format),
-				skipUUID, stylePath, resolveXlink, removeXlinkAttribute);
+                skipUUID, stylePath, resolveXlink, removeXlinkAttribute,
+                withMdStatus);
 	}
 
 	// --------------------------------------------------------------------------
@@ -337,14 +351,17 @@ public class MEFLib {
 	 * @throws Exception
 	 */
 	static String buildInfoFile(ServiceContext context, Metadata md,
-			Format format, Path pubDir, Path priDir, boolean skipUUID)
+            Format format, Path pubDir, Path priDir, boolean skipUUID,
+            boolean withMdStatus)
 			throws Exception {
 		Element info = new Element("info");
 		info.setAttribute("version", VERSION);
 
 		info.addContent(buildInfoGeneral(md, format, skipUUID, context));
 		info.addContent(buildInfoCategories(md));
-		info.addContent(buildMetadataStatus(context, md));
+        if (withMdStatus) {
+            info.addContent(buildMetadataStatus(context, md));
+        }
 		info.addContent(buildInfoPrivileges(context, md));
 
 		info.addContent(buildInfoFiles("public", pubDir.toString()));

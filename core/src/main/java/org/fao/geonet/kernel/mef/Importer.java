@@ -23,10 +23,28 @@
 
 package org.fao.geonet.kernel.mef;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
+import static org.fao.geonet.domain.Localized.translationXmlToLangMap;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
+
 import jeeves.server.ServiceConfig;
 import jeeves.server.context.ServiceContext;
+
 import org.fao.geonet.GeonetContext;
 import org.fao.geonet.Util;
 import org.fao.geonet.constants.Geonet;
@@ -61,23 +79,8 @@ import org.fao.geonet.utils.Xml;
 import org.fao.oaipmh.exceptions.BadArgumentException;
 import org.jdom.Element;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
-
-import static org.fao.geonet.domain.Localized.translationXmlToLangMap;
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 
 public class Importer {
 	public static List<String> doImport(final Element params, final ServiceContext context,

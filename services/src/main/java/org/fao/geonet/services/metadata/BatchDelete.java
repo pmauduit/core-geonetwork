@@ -23,11 +23,15 @@
 
 package org.fao.geonet.services.metadata;
 
-import com.google.common.collect.Sets;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+
 import jeeves.constants.Jeeves;
 import jeeves.server.ServiceConfig;
 import jeeves.server.UserSession;
 import jeeves.server.context.ServiceContext;
+
 import org.fao.geonet.GeonetContext;
 import org.fao.geonet.Util;
 import org.fao.geonet.constants.Geonet;
@@ -44,9 +48,7 @@ import org.fao.geonet.repository.MetadataRepository;
 import org.fao.geonet.utils.IO;
 import org.jdom.Element;
 
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
+import com.google.common.collect.Sets;
 
 /**
  * Removes a metadata from the system.
@@ -102,7 +104,7 @@ public class BatchDelete extends BackupFileService {
 
                 //--- backup metadata in 'removed' folder
                 if (backupFile && info.getDataInfo().getType() != MetadataType.SUB_TEMPLATE) {
-                    backupFile(context, idString, info.getUuid(), MEFLib.doExport(context, info.getUuid(), "full", false, true, false));
+                    backupFile(context, idString, info.getUuid(), MEFLib.doExport(context, info.getUuid(), "full", false, true, false, true));
                 }
 
                 //--- remove the metadata directory

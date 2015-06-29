@@ -23,17 +23,22 @@
 
 package org.fao.geonet.services.mef;
 
+import java.nio.file.Path;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import jeeves.constants.Jeeves;
 import jeeves.interfaces.Service;
 import jeeves.server.ServiceConfig;
 import jeeves.server.UserSession;
 import jeeves.server.context.ServiceContext;
-import org.fao.geonet.kernel.search.SearcherType;
-import org.fao.geonet.utils.BinaryFile;
-import org.fao.geonet.utils.Log;
-import org.fao.geonet.Util;
-import org.fao.geonet.utils.Xml;
+
 import org.fao.geonet.GeonetContext;
+import org.fao.geonet.Util;
 import org.fao.geonet.constants.Edit;
 import org.fao.geonet.constants.Geonet;
 import org.fao.geonet.kernel.SelectionManager;
@@ -42,10 +47,11 @@ import org.fao.geonet.kernel.mef.MEFLib.Format;
 import org.fao.geonet.kernel.mef.MEFLib.Version;
 import org.fao.geonet.kernel.search.MetaSearcher;
 import org.fao.geonet.kernel.search.SearchManager;
+import org.fao.geonet.kernel.search.SearcherType;
+import org.fao.geonet.utils.BinaryFile;
+import org.fao.geonet.utils.Log;
+import org.fao.geonet.utils.Xml;
 import org.jdom.Element;
-
-import java.nio.file.Path;
-import java.util.*;
 
 /**
  * Export one or more metadata records in Metadata Exchange Format (MEF) file
@@ -90,6 +96,8 @@ public class Export implements Service {
 		boolean skipUUID = Boolean.parseBoolean(Util.getParam(params, "skipUuid", "false"));
         boolean resolveXlink = Boolean.parseBoolean(Util.getParam(params, "resolveXlink", "true"));
         boolean removeXlinkAttribute = Boolean.parseBoolean(Util.getParam(params, "removeXlinkAttribute", "true"));
+        boolean withMetadataStatus = Boolean.parseBoolean(Util.getParam(params,
+                "withMetadataStatus", "true"));
 		String relatedMetadataRecord = Util
 				.getParam(params, "relation", "true");
 
@@ -131,7 +139,8 @@ public class Export implements Service {
 		// Uuid parameter MUST be set and add to selection manager before
 		// export.
 		if (version == null) {
-			file = MEFLib.doExport(context, uuid, format, skipUUID, resolveXlink, removeXlinkAttribute);
+            file = MEFLib.doExport(context, uuid, format, skipUUID,
+                    resolveXlink, removeXlinkAttribute, withMetadataStatus);
 		} else {
 			// MEF version 2 support multiple metadata record by file.
 
@@ -180,7 +189,9 @@ public class Export implements Service {
 			Log.info(Geonet.MEF, "Building MEF2 file with " + uuids.size()
                                  + " records.");
 
-			file = MEFLib.doMEF2Export(context, uuids, format, false, stylePath, resolveXlink, removeXlinkAttribute);
+            file = MEFLib.doMEF2Export(context, uuids, format, false,
+                    stylePath, resolveXlink, removeXlinkAttribute,
+                    withMetadataStatus);
 		}
 
 		// -- Reset selection manager

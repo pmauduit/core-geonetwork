@@ -23,7 +23,25 @@
 
 package org.fao.geonet.kernel.mef;
 
+import static com.google.common.xml.XmlEscapers.xmlContentEscaper;
+import static org.fao.geonet.Constants.CHARSET;
+import static org.fao.geonet.constants.Geonet.IndexFieldNames.LOCALE;
+import static org.fao.geonet.constants.Geonet.IndexFieldNames.UUID;
+import static org.fao.geonet.kernel.mef.MEFConstants.FILE_INFO;
+import static org.fao.geonet.kernel.mef.MEFConstants.FILE_METADATA;
+import static org.fao.geonet.kernel.mef.MEFConstants.MD_DIR;
+import static org.fao.geonet.kernel.mef.MEFConstants.SCHEMA;
+
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 import jeeves.server.context.ServiceContext;
+
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
@@ -54,23 +72,6 @@ import org.fao.geonet.utils.IO;
 import org.fao.geonet.utils.Xml;
 import org.jdom.Element;
 
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import static com.google.common.xml.XmlEscapers.xmlContentEscaper;
-import static org.fao.geonet.Constants.CHARSET;
-import static org.fao.geonet.constants.Geonet.IndexFieldNames.LOCALE;
-import static org.fao.geonet.constants.Geonet.IndexFieldNames.UUID;
-import static org.fao.geonet.kernel.mef.MEFConstants.FILE_INFO;
-import static org.fao.geonet.kernel.mef.MEFConstants.FILE_METADATA;
-import static org.fao.geonet.kernel.mef.MEFConstants.MD_DIR;
-import static org.fao.geonet.kernel.mef.MEFConstants.SCHEMA;
-
 class MEF2Exporter {
 	/**
 	 * Create a MEF2 file in ZIP format.
@@ -86,7 +87,9 @@ class MEF2Exporter {
 	 * @throws Exception
 	 */
 	public static Path doExport(ServiceContext context, Set<String> uuids,
-			Format format, boolean skipUUID, Path stylePath, boolean resolveXlink, boolean removeXlinkAttribute) throws Exception {
+            Format format, boolean skipUUID, Path stylePath,
+            boolean resolveXlink, boolean removeXlinkAttribute,
+            boolean withMdStatus) throws Exception {
 
 		Path file = Files.createTempFile("mef-", ".mef");
         SearchManager searchManager = context.getBean(SearchManager.class);
@@ -189,7 +192,8 @@ class MEF2Exporter {
                         ))
                 )));
                 createMetadataFolder(context, uuid, zipFs, skipUUID, stylePath,
-                        format, resolveXlink, removeXlinkAttribute);
+                        format, resolveXlink, removeXlinkAttribute,
+                        withMdStatus);
             }
             Files.write(zipFs.getPath("/index.csv"), csvBuilder.toString().getBytes(Constants.CHARSET));
             Files.write(zipFs.getPath("/index.html"), Xml.getString(html).getBytes(Constants.CHARSET));
@@ -228,9 +232,10 @@ class MEF2Exporter {
 	 * @param format
 	 * @throws Exception
 	 */
-	private static void createMetadataFolder(ServiceContext context,
-			String uuid, FileSystem zipFs, boolean skipUUID,
-			Path stylePath, Format format, boolean resolveXlink, boolean removeXlinkAttribute) throws Exception {
+    private static void createMetadataFolder(ServiceContext context,
+            String uuid, FileSystem zipFs, boolean skipUUID, Path stylePath,
+            Format format, boolean resolveXlink, boolean removeXlinkAttribute,
+            boolean withMdStatus) throws Exception {
 
         final Path metadataRootDir = zipFs.getPath(uuid);
         Files.createDirectories(metadataRootDir);
@@ -275,7 +280,7 @@ class MEF2Exporter {
 
 		// --- save info file
 		byte[] binData = MEFLib.buildInfoFile(context, record, format, pubDir,
-				priDir, skipUUID).getBytes(Constants.ENCODING);
+				priDir, skipUUID, withMdStatus).getBytes(Constants.ENCODING);
 
         Files.write(metadataRootDir.resolve(FILE_INFO), binData);
 
