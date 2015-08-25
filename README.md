@@ -1,3 +1,9 @@
+# geOrchestra debian package generation:
+
+```
+mvn clean install -DskipTests && mvn package deb:package -PdebianPackage -DskipTests -pl web
+```
+
 # Features
 
 * Immediate search access to local and distributed geospatial catalogues
