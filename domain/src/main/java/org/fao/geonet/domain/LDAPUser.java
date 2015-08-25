@@ -110,14 +110,14 @@ public class LDAPUser extends InetOrgPerson implements UserDetails {
      */
     @Override
     public boolean equals(Object obj) {
-    	try {
-    		return super.equals(obj);
-    	} catch (Exception e) {
-    		// TODO find a better understanding ;-)
-    			return false;
-    	}
+        try {
+            return super.equals(obj);
+        } catch (Exception e) {
+            // TODO find a better understanding
+            return false;
+        }
     }
-    
+
     /**
      * @see org.springframework.security.ldap.userdetails.LdapUserDetailsImpl#hashCode()
      * @return
