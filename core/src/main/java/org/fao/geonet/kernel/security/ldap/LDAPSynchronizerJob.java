@@ -190,9 +190,9 @@ public class LDAPSynchronizerJob extends QuartzJobBean {
                 return input.getId();
             }
         });
-        if (!userIds.isEmpty()) {
-            userGroupRepository.deleteAllByIdAttribute(UserGroupId_.userId, userIds);
-        }
+		if (!userIds.isEmpty()) {
+			userGroupRepository.deleteAllByIdAttribute(UserGroupId_.userId, userIds);
+		}
         for (User u : usersFound) {
             long nbOfUserRecord = metadataRepository.count(MetadataSpecs.isOwnedByUser(u.getId()));
             if (nbOfUserRecord > 0) {
