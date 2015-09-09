@@ -1,5 +1,14 @@
 package org.fao.geonet.kernel.search.index;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.taxonomy.CategoryPath;
@@ -12,18 +21,11 @@ import org.fao.geonet.constants.Geonet;
 import org.fao.geonet.kernel.search.LuceneConfig;
 import org.fao.geonet.utils.Log;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * For concurrency issues this class should not escape the confines of this package because
- * {@link LuceneIndexLanguageTracker} controls access to it and also controls concurrency and 
+ * {@link LuceneIndexLanguageTracker} controls access to it and also controls concurrency and
  * synchronization
- * 
+ *
  * @author jeichar
  */
 class TaxonomyIndexTracker {
@@ -65,7 +67,7 @@ class TaxonomyIndexTracker {
     		throw e;
     	}
     }
-    
+
     TaxonomyReader acquire() throws IOException {
         if(taxonomyReader == null) {
             this.taxonomyReader = new DirectoryTaxonomyReader(taxonomyWriter);
@@ -96,6 +98,8 @@ class TaxonomyIndexTracker {
         return docAfterFacetBuild;
     }
 
+
+    @PreDestroy
     void close(List<Throwable> errors) throws IOException {
         try {
             if(taxonomyReader != null) {
@@ -130,7 +134,7 @@ class TaxonomyIndexTracker {
         }
     }
 
-    
+
     void reset() throws Exception {
         List<Throwable> errors = new ArrayList<Throwable>(5);
         close(errors);

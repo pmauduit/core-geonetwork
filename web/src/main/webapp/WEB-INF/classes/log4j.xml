@@ -41,7 +41,7 @@
         <level value="WARN" />
     </logger>
     <logger name="geonetwork.schemamanager">
-        <level value="WARN" />
+        <level value="DEBUG" />
     </logger>
     <logger name="geonetwork.thesaurus-man">
         <level value="WARN" />
@@ -131,7 +131,7 @@
         <level value="WARN" />
     </logger>
     <logger name="jeeves.engine">
-        <level value="WARN" />
+        <level value="DEBUG" />
     </logger>
     <logger name="jeeves.dbmspool">
         <level value="WARN" />
