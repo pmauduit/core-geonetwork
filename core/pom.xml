@@ -133,6 +133,13 @@
       <artifactId>metrics-log4j</artifactId>
     </dependency>
 
+    <!-- Yet another metrics library -->
+    <dependency>
+      <groupId>com.netflix.servo</groupId>
+      <artifactId>servo-core</artifactId>
+      <version>0.12.12</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.xmlgraphics</groupId>
       <artifactId>fop</artifactId>

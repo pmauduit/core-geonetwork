@@ -27,20 +27,42 @@
 
 package org.fao.geonet.kernel;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import static org.fao.geonet.repository.specification.MetadataSpecs.hasMetadataUuid;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.Root;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.eclipse.jetty.util.StringUtil;
 import org.fao.geonet.ApplicationContextHolder;
 import org.fao.geonet.GeonetContext;
 import org.fao.geonet.NodeInfo;
@@ -141,36 +163,21 @@ import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.Root;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
+import com.netflix.servo.monitor.BasicTimer;
+import com.netflix.servo.monitor.MonitorConfig;
+import com.netflix.servo.monitor.Monitors;
+import com.netflix.servo.monitor.Stopwatch;
+import com.netflix.servo.monitor.Timer;
 
 import jeeves.server.UserSession;
 import jeeves.server.context.ServiceContext;
@@ -178,16 +185,13 @@ import jeeves.transaction.TransactionManager;
 import jeeves.transaction.TransactionTask;
 import jeeves.xlink.Processor;
 
-import static org.fao.geonet.repository.specification.MetadataSpecs.hasMetadataUuid;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 /**
  * Handles all operations on metadata (select,insert,update,delete etc...).
  */
 //@Transactional(propagation = Propagation.REQUIRED, noRollbackFor = {XSDValidationErrorEx.class, NoSchemaMatchesException.class})
 public class DataManager implements ApplicationEventPublisherAware {
 
-    private static final int METADATA_BATCH_PAGE_SIZE = 100000;
+    private static final int METADATA_BATCH_PAGE_SIZE = 1000;
     Lock indexLock = new ReentrantLock();
     Set<String> waitForIndexing = new HashSet<String>();
     Set<String> indexing = new HashSet<String>();
@@ -331,6 +335,7 @@ public class DataManager implements ApplicationEventPublisherAware {
      * @param force Force reindexing all from scratch
      **/
     public synchronized void init(ServiceContext context, Boolean force) throws Exception {
+        Monitors.registerObject(this);
         this.servContext = context;
         final GeonetworkDataDirectory dataDirectory = context.getBean(GeonetworkDataDirectory.class);
         stylePath = dataDirectory.resolveWebResource(Geonet.Path.STYLESHEETS);
@@ -566,7 +571,13 @@ public class DataManager implements ApplicationEventPublisherAware {
     /**
      * TODO javadoc.
      */
+    
+    private final Timer indexMetadataTimer = new BasicTimer(
+            MonitorConfig.builder("indexMetadata").build());
+    
     public void indexMetadata(final String metadataId, boolean forceRefreshReaders) throws Exception {
+        Stopwatch s = indexMetadataTimer.start();
+        try {
         indexLock.lock();
         try {
             if (waitForIndexing.contains(metadataId)) {
@@ -776,6 +787,9 @@ public class DataManager implements ApplicationEventPublisherAware {
         }
         if (fullMd != null) {
             applicationEventPublisher.publishEvent(new MetadataIndexCompleted(fullMd));
+        }
+        } finally {
+            s.stop();
         }
     }
 

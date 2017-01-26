@@ -23,7 +23,13 @@
 
 package org.fao.geonet.kernel;
 
-import jeeves.server.context.ServiceContext;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.fao.geonet.Util;
 import org.fao.geonet.constants.Geonet;
@@ -32,13 +38,11 @@ import org.fao.geonet.kernel.search.SearchManager;
 import org.fao.geonet.utils.Log;
 import org.springframework.transaction.TransactionStatus;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.netflix.servo.annotations.DataSourceType;
+import com.netflix.servo.annotations.Monitor;
+import com.netflix.servo.monitor.Monitors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jeeves.server.context.ServiceContext;
 
 /**
  * A runnable for indexing multiple metadata in a separate thread.
@@ -50,7 +54,10 @@ final class IndexMetadataTask implements Runnable {
     private final TransactionStatus _transactionStatus;
     private final Set<IndexMetadataTask> _batchIndex;
     private final SearchManager searchManager;
+
+    @Monitor(name="metadataIndexed", type=DataSourceType.COUNTER)
     private final AtomicInteger indexed;
+
     private User _user;
 
     /**
@@ -74,6 +81,7 @@ final class IndexMetadataTask implements Runnable {
         if (context.getUserSession() != null) {
             this._user = context.getUserSession().getPrincipal();
         }
+        Monitors.registerObject(this.toString(), this);
     }
 
     public void run() {
