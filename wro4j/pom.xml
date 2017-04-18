@@ -38,7 +38,7 @@
 
     <dependency>
       <groupId>com.google.javascript</groupId>
-      <artifactId>closure-compiler</artifactId>
+      <artifactId>closure-compiler-unshaded</artifactId>
       <version>v20161201</version>
     </dependency>
 
@@ -73,6 +73,10 @@
         <exclusion>
           <groupId>com.github.lltyk</groupId>
           <artifactId>dojo-shrinksafe</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.javascript</groupId>
+          <artifactId>closure-compiler</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
