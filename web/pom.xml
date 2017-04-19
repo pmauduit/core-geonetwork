@@ -291,6 +291,12 @@
       <groupId>org.mapfish.print</groupId>
       <artifactId>print-lib</artifactId>
       <version>${print-lib.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.xmlgraphics</groupId>
+          <artifactId>batik-js</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- ====================== -->
@@ -691,6 +697,10 @@
           </webApp>
           <systemProperties>
             <systemProperty>
+              <name>logback.configurationFile</name>
+              <value>${basedir}/logback-jetty.xml</value>
+            </systemProperty>
+            <systemProperty>
               <name>org.eclipse.jetty.server.Request.maxFormContentSize</name>
               <value>500000</value>
             </systemProperty>
@@ -698,6 +708,13 @@
           <stopKey>JETTY_TOP</stopKey>
           <stopPort>${jetty.stop.port}</stopPort>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.15</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
