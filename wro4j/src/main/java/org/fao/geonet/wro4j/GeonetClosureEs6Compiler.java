@@ -121,7 +121,7 @@ public class GeonetClosureEs6Compiler implements ResourcePostProcessor, Resource
         //options.setCodingConvention(new ClosureCodingConvention());
         //options.setOutputCharset(this.getEncoding());
         options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
-        options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT);
+        options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
         options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.WARNING);
         return options;
     }
