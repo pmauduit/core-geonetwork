@@ -61,6 +61,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -219,7 +220,7 @@ public class Publish {
                     }
                 });
             } else {
-                return Iterators.emptyIterator();
+                return Collections.emptyIterator();
             }
         } else {
             return new Iterator<String>() {
