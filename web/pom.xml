@@ -697,10 +697,6 @@
           </webApp>
           <systemProperties>
             <systemProperty>
-              <name>logback.configurationFile</name>
-              <value>${basedir}/logback-jetty.xml</value>
-            </systemProperty>
-            <systemProperty>
               <name>org.eclipse.jetty.server.Request.maxFormContentSize</name>
               <value>500000</value>
             </systemProperty>
@@ -708,13 +704,6 @@
           <stopKey>JETTY_TOP</stopKey>
           <stopPort>${jetty.stop.port}</stopPort>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>0.9.15</version>
-          </dependency>
-        </dependencies>
       </plugin>
     </plugins>
   </build>
