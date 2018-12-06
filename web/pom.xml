@@ -515,6 +515,13 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>schema-dcat-ap</artifactId>
+      <version>${gn.schemas.version}</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>schema-iso19110</artifactId>
       <version>${gn.schemas.version}</version>
     </dependency>
@@ -753,6 +760,13 @@
                   <targetPath>${basedir}/src/main/webapp/WEB-INF/data/config/schema_plugins
                   </targetPath>
                 </resource>
+                <resource>
+                  <directory>${project.basedir}/../schemas/dcat-ap1.1/src/main/plugin</directory>
+                  <targetPath>${basedir}/src/main/webapp/WEB-INF/data/config/schema_plugins
+                  </targetPath>
+                </resource>
+
+
                 <!-- Copy the documentation in the webapp. -->
                 <resource>
                   <directory>${project.basedir}/../docs/manuals/target/doc</directory>
