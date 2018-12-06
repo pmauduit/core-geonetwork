@@ -1,0 +1,22 @@
+version: "2.0"
+
+services:
+  database:
+    image: mdillon/postgis
+    environment:
+     - POSTGRES_PASSWORD=geonetwork
+     - POSTGRES_USER=geonetwork
+     - POSTGRES_DB=geonetwork
+
+  geonetwork:
+    image: tomcat
+    environment:
+     - JAVA_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
+    volumes:
+     - /home/pmauduit/.m2/repository/org/geonetwork-opensource/web-app/3.5.0-SNAPSHOT/web-app-3.5.0-SNAPSHOT.war:/usr/local/tomcat/webapps/geonetwork.war
+    ports:
+     - "9010:9010"
+     - "8080:8080"
+     - "5005:5005"
+
+
