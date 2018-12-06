@@ -90,8 +90,10 @@ public class InspireAtomFeed extends GeonetEntity implements Serializable {
                     InspireAtomFeedEntry inspireAtomFeedEntry = new InspireAtomFeedEntry();
 
                     inspireAtomFeedEntry.setTitle(entry.getChildText("title", ns));
-                    inspireAtomFeedEntry.setCrs(entry.getChild("category", ns).getAttributeValue("term"));
-
+                    try {
+                      inspireAtomFeedEntry.setCrs(entry.getChild("category", ns).getAttributeValue("term"));
+                    } catch (NullPointerException e) 
+                    {}
                     inspireAtomFeedEntry.setType(linkEl.getAttributeValue("type"));
                     inspireAtomFeedEntry.setLang(linkEl.getAttributeValue("hreflang"));
                     inspireAtomFeedEntry.setUrl(linkEl.getAttributeValue("href"));
